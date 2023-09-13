@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/home/gabor/cloud_dev_env"
+set -gx VIRTUAL_ENV "/home/gabor/Documents/GitHub/Cloud-Development-2023/cloud_dev_env"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH
