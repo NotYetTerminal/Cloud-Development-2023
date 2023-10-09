@@ -64,20 +64,20 @@ class SwimApp(App):
 </html>
         """
 
-        with open(f"ca1_textual/{name}-{age}-{distance}-{stroke}-Chart.html", "w+") as f:
+        with open(f"ca1_textual/charts/{name}-{age}-{distance}-{stroke}-Chart.html", "w+") as f:
             f.write(file_header)
 
             for time, convert in zip(times, converts):
                 file_body: str = f"""
                 <svg height="30" width="400">
-                        <rect height="30" width="{swim_utils.convert2range(convert, 0, 9150, 0, 400)}" style="fill:rgb(0,0,255);" />
+                        <rect height="30" width="{swim_utils.convert2range(convert, min(converts) - 100, max(converts) + 100, 0, 400)}" style="fill:rgb(0,0,255);" />
                 </svg>{time}<br />
 """
                 f.write(file_body)
 
             f.write(file_footer)
 
-        webbrowser.open(f"ca1_textual/{name}-{age}-{distance}-{stroke}-Chart.html")
+        webbrowser.open(f"ca1_textual/charts/{name}-{age}-{distance}-{stroke}-Chart.html")
         return
 
 
