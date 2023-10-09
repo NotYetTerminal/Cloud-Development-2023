@@ -1,7 +1,7 @@
 from statistics import mean
 
 
-FOLDER: str = "ca1_textual/swimdata/"
+FOLDER: str = "swimdata/"
 
 
 def convert_2_hundreths(time: str) -> int:

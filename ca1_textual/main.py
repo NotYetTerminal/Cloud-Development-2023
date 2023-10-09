@@ -110,7 +110,7 @@ class SwimApp(App):
     </body>
 </html>
         """
-        chart_path: str = f"ca1_textual/charts/{name}-{age}-{distance}-{stroke}-Chart.html"
+        chart_path: str = f"charts/{name}-{age}-{distance}-{stroke}-Chart.html"
 
         with open(chart_path, "w+") as f:
             f.write(file_header)
@@ -182,9 +182,7 @@ class SwimApp(App):
 def main() -> None:
     swim_app: SwimApp = SwimApp()
     swim_app.run()
-
     return
-
 
 
 if __name__ == "__main__":
