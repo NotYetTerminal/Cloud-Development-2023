@@ -1,12 +1,13 @@
 import os
 from textual import on
 from textual.app import App, ComposeResult
+from textual.containers import Horizontal
 from textual.widgets import Select, ListView, ListItem, Label, Button
 import swim_utils
 import webbrowser
 
 class SwimApp(App):
-
+    CSS_PATH = "style.tcss"
 
     data_dict: dict = {}
     list_view: ListView = None
@@ -16,14 +17,17 @@ class SwimApp(App):
 
 
     def compose(self) -> ComposeResult:
+        top_label: Label = Label("Swimmers Data Chart Creator", id = "title")
+        yield top_label
+
         data_dict = self.gather_files_informations()
-        yield Select((key, f"{key}:{value}") for key, value in data_dict.items())
+        yield Select(((key, f"{key}:{value}") for key, value in data_dict.items()), prompt = "Select a Swimmer")
 
         self.list_view = ListView()
         yield self.list_view
 
-        self.generate_button = Button("Generate Chart!", disabled = True)
-        yield self.generate_button
+        self.generate_button = Button("Generate Chart!", id = "generate", disabled = True)
+        yield Horizontal(self.generate_button, Button("Exit", id = "exit"))
 
 
     @on(Select.Changed)
@@ -46,6 +50,9 @@ class SwimApp(App):
 
     @on(Button.Pressed)
     def generate_chart(self, event: Button.Pressed) -> None:
+        if event.button.id == "exit":
+            self.exit()
+            return
         name, age, distance, stroke, times, converts, average = swim_utils.get_swimmers_data(self.complete_file_name)
 
         file_header: str = f"""<!DOCTYPE html>
@@ -63,8 +70,9 @@ class SwimApp(App):
     </body>
 </html>
         """
+        chart_path: str = f"ca1_textual/charts/{name}-{age}-{distance}-{stroke}-Chart.html"
 
-        with open(f"ca1_textual/charts/{name}-{age}-{distance}-{stroke}-Chart.html", "w+") as f:
+        with open(chart_path, "w+") as f:
             f.write(file_header)
 
             for time, convert in zip(times, converts):
@@ -77,7 +85,7 @@ class SwimApp(App):
 
             f.write(file_footer)
 
-        webbrowser.open(f"ca1_textual/charts/{name}-{age}-{distance}-{stroke}-Chart.html")
+        webbrowser.open(chart_path)
         return
 
 
