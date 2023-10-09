@@ -4,12 +4,13 @@
     width: 100%;
 }
 
-#title {
+.title {
     padding: 1;
 }
 
 Select {
     margin: 1;
+    background: $accent;
 }
 
 Horizontal {
@@ -17,6 +18,12 @@ Horizontal {
 }
 
 Button {
-    width: 50%;
-    margin: 2;
+    margin: 1;
+}
+
+#dummy {
+    width: 0%;
+    height: 0%;
+    border: none;
+    margin: 0;
 }

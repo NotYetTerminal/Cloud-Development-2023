@@ -10,48 +10,88 @@ class SwimApp(App):
     CSS_PATH = "style.tcss"
 
     data_dict: dict = {}
-    list_view: ListView = None
     selected_person_name: str = ""
     complete_file_name: str = ""
+
+    top_label: Label = None
+
+    name_label: Label = None
+    name_select: Select = None
+
+    type_Label: Label = None
+    type_select: Select = None
+
     generate_button: Button = None
+
+    popup_label: Label = None
+    dummy_button: Button = None
+    popup_button_yes: Button = None
+    popup_button_no: Button = None
+
+    popup_open: str = "none"
 
 
     def compose(self) -> ComposeResult:
-        top_label: Label = Label("Swimmers Data Chart Creator", id = "title")
-        yield top_label
+        self.top_label = Label("Swimmers Data Chart Creator", classes = "title")
+        yield self.top_label
 
+        self.name_label = Label("Swimmers Names:")
+        yield self.name_label
         data_dict = self.gather_files_informations()
-        yield Select(((key, f"{key}:{value}") for key, value in data_dict.items()), prompt = "Select a Swimmer")
+        self.name_select = Select(((key, f"{key}:{value}") for key, value in data_dict.items()), id = "name", prompt = "")
+        yield self.name_select
 
-        self.list_view = ListView()
-        yield self.list_view
+        self.type_Label = Label("Swimmer Age - Stroke - Distance:")
+        yield self.type_Label
+        self.type_select = Select([], id = "type", prompt = "")
+        yield self.type_select
 
         self.generate_button = Button("Generate Chart!", id = "generate", disabled = True)
-        yield Horizontal(self.generate_button, Button("Exit", id = "exit"))
+        yield self.generate_button
+
+        self.popup_label = Label("Do you want to continue?", classes = "title")
+        self.popup_label.styles.display = "none"
+        yield self.popup_label
+
+        self.dummy_button = Button(id = "dummy")
+        yield self.dummy_button
+
+        self.popup_button_yes = Button("Yes", id = "yes", variant = "success")
+        self.popup_button_yes.styles.display = "none"
+        yield self.popup_button_yes
+
+        self.popup_button_no = Button("No", id = "no", variant = "error")
+        self.popup_button_no.styles.display = "none"
+        yield self.popup_button_no
 
 
     @on(Select.Changed)
     def change_list_view(self, event: Select.Changed) -> None:
-        self.list_view.clear()
-        self.generate_button.disabled = True
-        if event.value != None:
-            self.selected_person_name = event.value.split(":")[0]
-            correct_data: list = event.value.split(":")[1].replace("[", "").replace("]", "").replace("'", "").split(", ")
-            self.list_view.extend((ListItem(Label(file_data))) for file_data in correct_data)
-        return
-    
-    @on(ListView.Selected)
-    def save_file_name(self, event: ListView.Selected) -> None:
-        file_value: str = event.item.displayed_children[0].renderable.plain
-        file_value = f"{file_value.split(' - ')[1]} - {file_value.split(' - ')[0]}"
-        self.complete_file_name: str = f"{self.selected_person_name}-{file_value}".replace(" ", "") + ".txt"
-        self.generate_button.disabled = False
+        if event.select.id == "name":
+            self.type_select.set_options([])
+            self.type_select.value = ""
+            self.generate_button.disabled = True
+            if event.value != None:
+                self.selected_person_name = event.value.split(":")[0]
+                correct_data: list = event.value.split(":")[1].replace("[", "").replace("]", "").replace("'", "").split(", ")
+                self.type_select.set_options((file_data, file_data) for file_data in correct_data)
+
+        elif event.select.id == "type":
+            if event.value != None:
+                file_value: str = f"{event.value.split(' - ')[0]} - {event.value.split(' - ')[2]} - {event.value.split(' - ')[1]}"
+                self.complete_file_name: str = f"{self.selected_person_name}-{file_value}".replace(" ", "") + ".txt"
+                self.generate_button.disabled = False
         return
 
     @on(Button.Pressed)
     def generate_chart(self, event: Button.Pressed) -> None:
-        if event.button.id == "exit":
+        if event.button.id == "no":
             self.exit()
+            return
+        elif event.button.id == "yes":
+            self.toggle_popup()
+            return
+        elif event.button.id == "dummy":
             return
         name, age, distance, stroke, times, converts, average = swim_utils.get_swimmers_data(self.complete_file_name)
 
@@ -86,9 +126,28 @@ class SwimApp(App):
             f.write(file_footer)
 
         webbrowser.open(chart_path)
+
+        self.toggle_popup()
         return
 
 
+    def toggle_popup(self) -> None:
+        self.top_label.styles.display = self.popup_open
+        self.name_label.styles.display = self.popup_open
+        self.name_select.styles.display = self.popup_open
+        self.type_Label.styles.display = self.popup_open
+        self.type_select.styles.display = self.popup_open
+        self.generate_button.styles.display = self.popup_open
+
+        if self.popup_open == "none":
+            self.popup_open = "block"
+        else:
+            self.popup_open = "none"
+
+        self.popup_label.styles.display = self.popup_open
+        self.popup_button_yes.styles.display = self.popup_open
+        self.popup_button_no.styles.display = self.popup_open
+        return
 
     def gather_files_informations(self) -> dict:
         """
@@ -100,10 +159,10 @@ class SwimApp(App):
         for file_name in os.listdir(swim_utils.FOLDER):
             if ".txt" in file_name:
                 name, age, distance, swim_type = file_name.replace(".txt", "").split("-")
-                if f"{name} - {age}" in data_dict.keys():
-                    data_dict[f"{name} - {age}"].append(f"{swim_type} - {distance}")
+                if name in data_dict.keys():
+                    data_dict[name].append(f"{age} - {swim_type} - {distance}")
                 else:
-                    data_dict[f"{name} - {age}"] = [f"{swim_type} - {distance}"]
+                    data_dict[name] = [f"{age} - {swim_type} - {distance}"]
         
         data_dict = self.sort_dict_by_keys(data_dict)
 
