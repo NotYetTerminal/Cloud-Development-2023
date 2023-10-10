@@ -6,13 +6,16 @@ from textual.widgets import Select, ListView, ListItem, Label, Button
 import swim_utils
 import webbrowser
 
+
 class SwimApp(App):
     CSS_PATH = "style.tcss"
 
+    # store data related to selected file
     data_dict: dict = {}
     selected_person_name: str = ""
     complete_file_name: str = ""
 
+    # stores all of the widgets for toggleing the popup
     top_label: Label = None
 
     name_label: Label = None
@@ -30,7 +33,7 @@ class SwimApp(App):
 
     popup_open: str = "none"
 
-
+    # create all of the widgets and put them on the screen
     def compose(self) -> ComposeResult:
         self.top_label = Label("Swimmers Data Chart Creator", classes = "title")
         yield self.top_label
@@ -53,6 +56,8 @@ class SwimApp(App):
         self.popup_label.styles.display = "none"
         yield self.popup_label
 
+        # dummy button is there so when the popup appears it is selected
+        # instead of the yes button, and avoids a graphical issue
         self.dummy_button = Button(id = "dummy")
         yield self.dummy_button
 
@@ -67,6 +72,7 @@ class SwimApp(App):
 
     @on(Select.Changed)
     def change_list_view(self, event: Select.Changed) -> None:
+        # checks if the name or type dropdown is changed
         if event.select.id == "name":
             self.type_select.set_options([])
             self.type_select.value = ""
@@ -74,17 +80,21 @@ class SwimApp(App):
             if event.value != None:
                 self.selected_person_name = event.value.split(":")[0]
                 correct_data: list = event.value.split(":")[1].replace("[", "").replace("]", "").replace("'", "").split(", ")
+                # updates the type dropdown with data
                 self.type_select.set_options((file_data, file_data) for file_data in correct_data)
 
         elif event.select.id == "type":
             if event.value != None:
                 file_value: str = f"{event.value.split(' - ')[0]} - {event.value.split(' - ')[2]} - {event.value.split(' - ')[1]}"
+                # reconstructs the file name
                 self.complete_file_name: str = f"{self.selected_person_name}-{file_value}".replace(" ", "") + ".txt"
+                # enable generate button
                 self.generate_button.disabled = False
         return
 
     @on(Button.Pressed)
     def generate_chart(self, event: Button.Pressed) -> None:
+        # check which button is pressed, no, yes, the dummy, or generate
         if event.button.id == "no":
             self.exit()
             return
@@ -112,6 +122,7 @@ class SwimApp(App):
         """
         chart_path: str = f"charts/{name}-{age}-{distance}-{stroke}-Chart.html"
 
+        # write the header, body and footer html to a file
         with open(chart_path, "w+") as f:
             f.write(file_header)
 
@@ -125,12 +136,14 @@ class SwimApp(App):
 
             f.write(file_footer)
 
+        # open html chart
         webbrowser.open(chart_path)
 
+        # opens the popup
         self.toggle_popup()
         return
 
-
+    # toggle the popup for quitting
     def toggle_popup(self) -> None:
         self.top_label.styles.display = self.popup_open
         self.name_label.styles.display = self.popup_open
@@ -148,7 +161,8 @@ class SwimApp(App):
         self.popup_button_yes.styles.display = self.popup_open
         self.popup_button_no.styles.display = self.popup_open
         return
-
+    
+    # gets all of the file data from the folder
     def gather_files_informations(self) -> dict:
         """
         Returns a dictionary of all of the file names.
@@ -171,7 +185,7 @@ class SwimApp(App):
 
         return data_dict
     
-
+    # sorts a dictionary by it's keys
     def sort_dict_by_keys(self: object, old_dict: dict) -> dict:
         """
         Sorts a dictionary by the keys.
